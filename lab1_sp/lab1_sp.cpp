@@ -29,6 +29,7 @@ bool mousePressed = false;
 
 LRESULT CALLBACK WindowProc(HWND , UINT , WPARAM , LPARAM );
 
+
 int CALLBACK WinMain(
     _In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -139,6 +140,23 @@ void MouseDown(HWND hWnd, LPARAM lParam)
     x = LOWORD(lParam);
     y = HIWORD(lParam);
 
+    if (x < spriteWidth / 2)
+    {
+        x = spriteWidth / 2;
+    }
+    else if (x > clientWidth - spriteWidth / 2)
+    {
+        x = clientWidth - spriteWidth / 2;
+    }
+
+    if (y < spriteHeight / 2)
+    {
+        y = spriteHeight / 2;
+    }
+    else if (y > clientHeight - spriteHeight / 2)
+    {
+        y = clientHeight - spriteHeight / 2;
+    }
     dX = 5 * cos(angle);
     dY = 5 * sin(angle);
 
@@ -283,8 +301,11 @@ void MouseWheel(HWND hWnd, WPARAM wParam)
 
 void Timer(HWND hWnd)
 {
+   
+  
     if (x > clientWidth - spriteWidth / 2 + step)
     {
+        int randomAngle = rand() % 360;
         dX = -abs(dX);
     }
 
@@ -378,6 +399,13 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_CREATE:
             InitializeSpriteSize();
             break;
+        case WM_GETMINMAXINFO:
+        {
+            MINMAXINFO* pInfo = (MINMAXINFO*)lParam;
+            pInfo->ptMinTrackSize.x = 200; 
+            pInfo->ptMinTrackSize.y = 200; 
+            break;
+        }
         default:
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
         }
