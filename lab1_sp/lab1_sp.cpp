@@ -20,6 +20,7 @@ int clientHeight;
 int spriteWidth;
 int spriteHeight;
 int step = 5;
+int miniStep = 1;
 int x, y;
 double dX, dY;
 
@@ -110,7 +111,7 @@ int CALLBACK WinMain(
 
 void InitializeSpriteSize()
 {
-    Image temp(L"2pushd.png");
+    Image temp(L"a.png");
     if (temp.GetLastStatus() != Ok) {
         MessageBox(NULL, L"Failed to load image!", L"Error", MB_ICONERROR);
    
@@ -161,23 +162,7 @@ void MouseDown(HWND hWnd, LPARAM lParam)
     x = LOWORD(lParam);
     y = HIWORD(lParam);
 
-    if (x < spriteWidth / 2)
-    {
-        x = spriteWidth / 2;
-    }
-    else if (x > clientWidth - spriteWidth / 2)
-    {
-        x = clientWidth - spriteWidth / 2;
-    }
-
-    if (y < spriteHeight / 2)
-    {
-        y = spriteHeight / 2;
-    }
-    else if (y > clientHeight - spriteHeight / 2)
-    {
-        y = clientHeight - spriteHeight / 2;
-    }
+    EnsureSpriteInsideScreen();
     dX = 5 * cos(angle);
     dY = 5 * sin(angle);
 
@@ -188,31 +173,33 @@ void MouseMove(HWND hWnd, LPARAM lParam)
 {
     if (mousePressed)
     {
+        
         x = LOWORD(lParam);
         y = HIWORD(lParam);
 
-        if (y < spriteHeight / 2 + step)
+        if (y < spriteHeight / 2 + miniStep)
         {
-            y = spriteHeight / 2 + step;
+            y = spriteHeight / 2 + miniStep;
         }
 
-        if (y > clientHeight - spriteHeight / 2 - step)
+        if (y > clientHeight - spriteHeight / 2 - miniStep)
         {
             y = clientHeight - spriteHeight / 2;
         }
 
-        if (x < spriteWidth / 2 - step)
+        if (x < spriteWidth / 2 - miniStep)
         {
-            x = spriteWidth / 2 - step;
+            x = spriteWidth / 2 - miniStep;
         }
 
-        if (x > clientWidth - spriteWidth / 2 + step)
+        if (x > clientWidth - spriteWidth / 2 + miniStep)
         {
-            x = clientWidth - spriteWidth / 2 + step;
+            x = clientWidth - spriteWidth / 2 + miniStep;
         }
 
         InvalidateRect(hWnd, NULL, true);
     }
+    
 }
 
 
@@ -238,36 +225,52 @@ void KeyDown(HWND hWnd, WPARAM wParam)
         {
         case VK_UP:
         {
-            if (y > spriteHeight / 2 + step)
+            if (y >= spriteHeight / 2 + step)
             {
                 y -= step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            else if (y >= spriteHeight / 2+ miniStep) {
+                y -= miniStep;
                 InvalidateRect(hWnd, NULL, true);
             }
             break;
         }
         case VK_DOWN:
         {
-            if (y < clientHeight - spriteHeight / 2 - step)
+            if (y <= clientHeight - spriteHeight / 2 - step)
             {
                 y += step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            else if (y <= clientHeight - spriteHeight / 2- miniStep) {
+                y += miniStep;
                 InvalidateRect(hWnd, NULL, true);
             }
             break;
         }
         case VK_LEFT:
         {
-            if (x > spriteWidth / 2 - step)
+            if (x >= spriteWidth / 2 + step)
             {
                 x -= step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            else if (x >= spriteWidth / 2 + miniStep) {
+                x -= miniStep;
                 InvalidateRect(hWnd, NULL, true);
             }
             break;
         }
         case VK_RIGHT:
         {
-            if (x < clientWidth - spriteWidth / 2 + step)
+            if (x <= clientWidth - spriteWidth / 2 - step)
             {
                 x += step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            else if (x <= clientWidth - spriteWidth / 2- miniStep) {
+                x += miniStep;
                 InvalidateRect(hWnd, NULL, true);
             }
             break;
@@ -285,16 +288,25 @@ void MouseWheel(HWND hWnd, WPARAM wParam)
     {
         if (wheelDelta > 0)
         {
-            if (x < clientWidth - spriteWidth / 2 - step)
+            if (x <= clientWidth - spriteWidth / 2 - step)
             {
                 x += step;
             }
+            else if (x <= clientWidth - spriteWidth / 2 - miniStep) 
+            {
+                x += miniStep;
+            }
+
         }
         else if (wheelDelta < 0)
         {
-            if (x > step)
+            if (x >= spriteWidth / 2 + step)
             {
                 x -= step;
+            }
+            else if (x >= spriteWidth / 2 + miniStep)
+            {
+                x -= miniStep;
             }
         }
     }
@@ -302,16 +314,25 @@ void MouseWheel(HWND hWnd, WPARAM wParam)
     {
         if (wheelDelta > 0)
         {
-            if (y > spriteHeight / 2 + step)
+            if (y >= spriteHeight / 2 + step)
             {
                 y -= step;
             }
+            else if (y >= spriteHeight / 2 + miniStep)
+            {
+                y -= miniStep;
+            }
+
         }
         else if (wheelDelta < 0)
         {       
-            if (y < clientHeight - spriteHeight / 2 - step)
+            if (y <= clientHeight - spriteHeight / 2 - step)
             {
                 y += step;
+            }
+            else if (y <= clientHeight - spriteHeight / 2 - miniStep) 
+            {
+                y += miniStep;
             }
         }
     }
@@ -323,24 +344,23 @@ void MouseWheel(HWND hWnd, WPARAM wParam)
 void Timer(HWND hWnd)
 {
    
-  
-    if (x > clientWidth - spriteWidth / 2 + step)
+    if (x >= clientWidth - spriteWidth / 2 + step)
     {
-        int randomAngle = rand() % 360;
+       
         dX = -abs(dX);
     }
 
-    if (y > clientHeight - spriteHeight / 2 + step)
+    if (y >= clientHeight - spriteHeight / 2 + step)
     {
         dY = -abs(dY);
     }
 
-    if (x < spriteWidth / 2 - step)
+    if (x <= spriteWidth / 2 - step)
     {
         dX = abs(dX);
     }
 
-    if (y < spriteHeight / 2 + step)
+    if (y <= spriteHeight / 2 - step)
     {
         dY = abs(dY);
     }
@@ -369,7 +389,7 @@ void OnPaint(HWND hWnd, WPARAM wParam, int x, int y, int w, int h)
    PatBlt(memDC, 0, 0, rect.right, rect.bottom, WHITENESS);
 
     Graphics graphics(memDC);
-    Image image(L"2pushd.png");
+    Image image(L"a.png");
     Rect destRect(x, y, w, h);
     graphics.DrawImage(&image, destRect);
 
