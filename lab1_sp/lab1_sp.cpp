@@ -51,7 +51,8 @@ int CALLBACK WinMain(
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(RGB(0, 0, 0));
+    wc.hbrBackground = (HBRUSH)(CreateSolidBrush(RGB(255, 255, 255)));
+
     wc.lpszMenuName = NULL;
     wc.lpszClassName = CLASS_NAME;
     wc.hIconSm = LoadIcon(wc.hInstance, IDI_APPLICATION);
@@ -70,6 +71,7 @@ int CALLBACK WinMain(
 
 
     HWND hwnd = CreateWindow(
+      
         CLASS_NAME,
         szTitle,
         WS_OVERLAPPEDWINDOW,
@@ -107,11 +109,10 @@ int CALLBACK WinMain(
 
 void InitializeSpriteSize()
 {
-    Image temp(L"1pushd.png");
+    Image temp(L"2pushd.png");
     if (temp.GetLastStatus() != Ok) {
-        // Обработка ошибки загрузки изображения
         MessageBox(NULL, L"Failed to load image!", L"Error", MB_ICONERROR);
-        // Можно предпринять другие действия, например, выход из приложения или установка альтернативного изображения
+   
         return;
     }
     spriteHeight = temp.GetHeight();
@@ -317,12 +318,16 @@ void OnPaint(HWND hWnd, WPARAM wParam, int x, int y, int w, int h)
     }
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
+
+
     HDC memDC = CreateCompatibleDC(hdc);
     HBITMAP hBmp = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
     HBITMAP mOldBmp = (HBITMAP)SelectObject(memDC, hBmp);
 
+   PatBlt(memDC, 0, 0, rect.right, rect.bottom, WHITENESS);
+
     Graphics graphics(memDC);
-    Image image(L"1pushd.png");
+    Image image(L"2pushd.png");
     Rect destRect(x, y, w, h);
     graphics.DrawImage(&image, destRect);
 
@@ -339,6 +344,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_SIZE:
             ResizeWindow(lParam);
+            break;
+        case WM_ERASEBKGND:
+            return(1);
             break;
         case WM_LBUTTONDOWN:
             MouseDown(hWnd, lParam);
