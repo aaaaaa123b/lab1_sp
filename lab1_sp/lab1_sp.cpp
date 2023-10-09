@@ -120,11 +120,32 @@ void InitializeSpriteSize()
     spriteWidth = temp.GetWidth();
 }
 
+void EnsureSpriteInsideScreen()
+{
+    if (x < spriteWidth / 2)
+    {
+        x = spriteWidth / 2;
+    }
+    else if (x > clientWidth - spriteWidth / 2)
+    {
+        x = clientWidth - spriteWidth / 2;
+    }
+
+    if (y < spriteHeight / 2)
+    {
+        y = spriteHeight / 2;
+    }
+    else if (y > clientHeight - spriteHeight / 2)
+    {
+        y = clientHeight - spriteHeight / 2;
+    }
+}
 
 void ResizeWindow(LPARAM lParam)
 {
     clientWidth = LOWORD(lParam);
     clientHeight = HIWORD(lParam);
+    EnsureSpriteInsideScreen();
 }
 
 
@@ -402,8 +423,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_GETMINMAXINFO:
         {
             MINMAXINFO* pInfo = (MINMAXINFO*)lParam;
-            pInfo->ptMinTrackSize.x = 200; 
-            pInfo->ptMinTrackSize.y = 200; 
+            pInfo->ptMinTrackSize.x = 130; 
+            pInfo->ptMinTrackSize.y = 170; 
             break;
         }
         default:
