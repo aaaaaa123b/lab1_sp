@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include <gdiplus.h>
+#include <cmath>
 
 
 using namespace Gdiplus;
@@ -12,20 +13,24 @@ using namespace Gdiplus;
 static wchar_t  CLASS_NAME[] = L"DesktopApp";
 static wchar_t  szTitle[] = L"My Application";
 
-
-
 HINSTANCE hInst;
 
 int clientWidth;
 int clientHeight;
 int spriteWidth;
 int spriteHeight;
+int step = 5;
 int x, y;
-//bool started = true;
+double dX, dY;
+
+bool started = false;
+bool paused = false;
+bool mousePressed = false;
 
 LRESULT CALLBACK WindowProc(HWND , UINT , WPARAM , LPARAM );
 
-int CALLBACK WinMain(_In_ HINSTANCE hInstance,
+int CALLBACK WinMain(
+    _In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPSTR     lpCmdLine,
     _In_ int       nCmdShow)
@@ -33,6 +38,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance,
 {
     GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR           gdiplusToken;
+
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
 
@@ -75,9 +81,13 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance,
         NULL
     );
 
-    if (hwnd == NULL)
+    if (!hwnd)
     {
-        return 0;
+        MessageBox(NULL,
+            L"Call to RegisterClassEx failed!",
+            L"Windows Desktop Guided Tour",
+            NULL);
+        return 1;
     }
 
     ShowWindow(hwnd, nCmdShow);
@@ -92,6 +102,210 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance,
 
     GdiplusShutdown(gdiplusToken);
     return (int)msg.wParam;
+}
+
+
+void InitializeSpriteSize()
+{
+    Image temp(L"1pushd.png");
+    if (temp.GetLastStatus() != Ok) {
+        // Обработка ошибки загрузки изображения
+        MessageBox(NULL, L"Failed to load image!", L"Error", MB_ICONERROR);
+        // Можно предпринять другие действия, например, выход из приложения или установка альтернативного изображения
+        return;
+    }
+    spriteHeight = temp.GetHeight();
+    spriteWidth = temp.GetWidth();
+}
+
+
+void ResizeWindow(LPARAM lParam)
+{
+    clientWidth = LOWORD(lParam);
+    clientHeight = HIWORD(lParam);
+}
+
+
+void MouseDown(HWND hWnd, LPARAM lParam)
+{
+    KillTimer(hWnd, 1);
+    started = true;
+    paused = true;
+    mousePressed = true;
+
+    int angle = rand() % 360;
+
+    x = LOWORD(lParam);
+    y = HIWORD(lParam);
+
+    dX = 5 * cos(angle);
+    dY = 5 * sin(angle);
+
+    InvalidateRect(hWnd, NULL, TRUE);
+}
+
+void MouseMove(HWND hWnd, LPARAM lParam)
+{
+    if (mousePressed)
+    {
+        x = LOWORD(lParam);
+        y = HIWORD(lParam);
+
+        if (y < spriteHeight / 2 + step)
+        {
+            y = spriteHeight / 2 + step;
+        }
+
+        if (y > clientHeight - spriteHeight / 2 - step)
+        {
+            y = clientHeight - spriteHeight / 2;
+        }
+
+        if (x < spriteWidth / 2 - step)
+        {
+            x = spriteWidth / 2 - step;
+        }
+
+        if (x > clientWidth - spriteWidth / 2 + step)
+        {
+            x = clientWidth - spriteWidth / 2 + step;
+        }
+
+        InvalidateRect(hWnd, NULL, true);
+    }
+}
+
+
+void KeyDown(HWND hWnd, WPARAM wParam)
+{
+    if (wParam == VK_SPACE)
+    {
+        if (paused==true)
+        {
+            SetTimer(hWnd, 1, 42, NULL);
+            paused = false;
+        }
+        else
+        {
+            KillTimer(hWnd, 1);
+            paused = true;
+        }
+    }
+
+    if (paused==true)
+    {
+        switch (wParam)
+        {
+        case VK_UP:
+        {
+            if (y > spriteHeight / 2 + step)
+            {
+                y -= step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            break;
+        }
+        case VK_DOWN:
+        {
+            if (y < clientHeight - spriteHeight / 2 - step)
+            {
+                y += step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            break;
+        }
+        case VK_LEFT:
+        {
+            if (x > spriteWidth / 2 - step)
+            {
+                x -= step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            break;
+        }
+        case VK_RIGHT:
+        {
+            if (x < clientWidth - spriteWidth / 2 + step)
+            {
+                x += step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+            break;
+        }
+        break;
+        }
+    }
+}
+
+void MouseWheel(HWND hWnd, WPARAM wParam)
+{
+    int wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+    if (LOWORD(wParam) == MK_CONTROL)
+    {
+        for (; wheelDelta > WHEEL_DELTA; wheelDelta -= WHEEL_DELTA)
+        {
+            if (x < clientWidth - spriteWidth / 2)
+            {
+                x += step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+        }
+        for (; wheelDelta < 0; wheelDelta += WHEEL_DELTA)
+        {
+            if (x > step)
+            {
+                x -= step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+        }
+    }
+    else
+    {
+        for (; wheelDelta > WHEEL_DELTA; wheelDelta -= WHEEL_DELTA)
+        {
+            if (y < clientHeight - spriteHeight / 2 - step)
+            {
+                y += step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+        }
+        for (; wheelDelta < 0; wheelDelta += WHEEL_DELTA)
+        {
+            if (y > spriteHeight / 2 + step)
+            {
+                y -= step;
+                InvalidateRect(hWnd, NULL, true);
+            }
+        }
+    }
+}
+
+void Timer(HWND hWnd)
+{
+    if (x > clientWidth - spriteWidth / 2 + step)
+    {
+        dX = -abs(dX);
+    }
+
+    if (y > clientHeight - spriteHeight / 2 + step)
+    {
+        dY = -abs(dY);
+    }
+
+    if (x < spriteWidth / 2 - step)
+    {
+        dX = abs(dX);
+    }
+
+    if (y < spriteHeight / 2 + step)
+    {
+        dY = abs(dY);
+    }
+
+    x += (int)dX;
+    y += (int)dY;
+
+    InvalidateRect(hWnd, NULL, true);
 }
 
 void OnPaint(HWND hWnd, WPARAM wParam, int x, int y, int w, int h)
@@ -119,42 +333,46 @@ void OnPaint(HWND hWnd, WPARAM wParam, int x, int y, int w, int h)
     EndPaint(hWnd, &ps);
 }
 
-
-void InitializeSpriteSize()
-{
-    Image temp(L"1pushd.png");
-    spriteHeight = temp.GetHeight();
-    spriteWidth = temp.GetWidth();
-}
-
-void ResizeWindow(LPARAM lParam)
-{
-    clientWidth = LOWORD(lParam);
-    clientHeight = HIWORD(lParam);
-}
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-    case WM_SIZE:
-        ResizeWindow(lParam);
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-
-    case WM_PAINT:
-    {
-       OnPaint(hwnd, wParam, x - spriteWidth / 2, y - spriteHeight / 2, spriteWidth, spriteHeight);   
-       break;
-    }
-    case WM_CREATE:
-        InitializeSpriteSize();
-        break;
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-
-    return (LRESULT)NULL;
+        case WM_SIZE:
+            ResizeWindow(lParam);
+            break;
+        case WM_LBUTTONDOWN:
+            MouseDown(hWnd, lParam);
+            break;
+        case WM_MOUSEMOVE:
+            MouseMove(hWnd, lParam);
+            break;
+        case WM_LBUTTONUP:
+            mousePressed = false;
+            break;
+        case WM_KEYDOWN:
+            KeyDown(hWnd, wParam);
+            break;
+        case WM_MOUSEWHEEL:
+            MouseWheel(hWnd, wParam);
+            break;
+        case WM_TIMER:
+            Timer(hWnd);
+            break;
+        case WM_PAINT:
+            if (started)
+            {
+                OnPaint(hWnd, wParam, x - spriteWidth / 2, y - spriteHeight / 2, spriteWidth, spriteHeight);
+            }
+            break;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+        case WM_CREATE:
+            InitializeSpriteSize();
+            break;
+        default:
+            return DefWindowProc(hWnd, uMsg, wParam, lParam);
+        }
+        return (LRESULT)NULL;
 }
 
