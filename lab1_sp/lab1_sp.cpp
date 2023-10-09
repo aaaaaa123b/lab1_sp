@@ -280,45 +280,45 @@ void KeyDown(HWND hWnd, WPARAM wParam)
 void MouseWheel(HWND hWnd, WPARAM wParam)
 {
     int wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-    if (LOWORD(wParam) == MK_CONTROL)
+
+    if (LOWORD(wParam) == MK_SHIFT)
     {
-        for (; wheelDelta > WHEEL_DELTA; wheelDelta -= WHEEL_DELTA)
+        if (wheelDelta > 0)
         {
-            if (x < clientWidth - spriteWidth / 2)
+            if (x < clientWidth - spriteWidth / 2 - step)
             {
                 x += step;
-                InvalidateRect(hWnd, NULL, true);
             }
         }
-        for (; wheelDelta < 0; wheelDelta += WHEEL_DELTA)
+        else if (wheelDelta < 0)
         {
             if (x > step)
             {
                 x -= step;
-                InvalidateRect(hWnd, NULL, true);
             }
         }
     }
     else
     {
-        for (; wheelDelta > WHEEL_DELTA; wheelDelta -= WHEEL_DELTA)
-        {
-            if (y < clientHeight - spriteHeight / 2 - step)
-            {
-                y += step;
-                InvalidateRect(hWnd, NULL, true);
-            }
-        }
-        for (; wheelDelta < 0; wheelDelta += WHEEL_DELTA)
+        if (wheelDelta > 0)
         {
             if (y > spriteHeight / 2 + step)
             {
                 y -= step;
-                InvalidateRect(hWnd, NULL, true);
+            }
+        }
+        else if (wheelDelta < 0)
+        {       
+            if (y < clientHeight - spriteHeight / 2 - step)
+            {
+                y += step;
             }
         }
     }
+
+    InvalidateRect(hWnd, NULL, true);
 }
+
 
 void Timer(HWND hWnd)
 {
