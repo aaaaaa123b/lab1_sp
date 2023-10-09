@@ -62,8 +62,8 @@ int CALLBACK WinMain(
     if (!RegisterClassEx(&wc))
     {
         MessageBox(NULL,
-            L"Call to RegisterClassEx failed!",
-            L"Windows Desktop Guided Tour",
+            L"Registration Failed",
+            L"Failed to register window class.",
             NULL);
 
         return 1;
@@ -88,8 +88,8 @@ int CALLBACK WinMain(
     if (!hwnd)
     {
         MessageBox(NULL,
-            L"Call to RegisterClassEx failed!",
-            L"Windows Desktop Guided Tour",
+            L"Creation Failed",
+            L"Failed to create window.",
             NULL);
         return 1;
     }
@@ -156,13 +156,15 @@ void MouseDown(HWND hWnd, LPARAM lParam)
     started = true;
     paused = true;
     mousePressed = true;
-
-    int angle = rand() % 360;
-
     x = LOWORD(lParam);
     y = HIWORD(lParam);
 
     EnsureSpriteInsideScreen();
+
+    int angle = rand() % 360;
+    while ((angle >= 0 && angle <= 89) || (angle >= 91 && angle <= 179) || (angle >= 181 && angle <= 269) || (angle >= 271 && angle <= 359)) {
+        angle = rand() % 360;
+    }
     dX = 5 * cos(angle);
     dY = 5 * sin(angle);
 
@@ -177,22 +179,22 @@ void MouseMove(HWND hWnd, LPARAM lParam)
         x = LOWORD(lParam);
         y = HIWORD(lParam);
 
-        if (y < spriteHeight / 2 + miniStep)
+        if (y <= spriteHeight / 2 + miniStep)
         {
             y = spriteHeight / 2 + miniStep;
         }
 
-        if (y > clientHeight - spriteHeight / 2 - miniStep)
+        if (y >= clientHeight - spriteHeight / 2 - miniStep)
         {
             y = clientHeight - spriteHeight / 2;
         }
 
-        if (x < spriteWidth / 2 - miniStep)
+        if (x <= spriteWidth / 2 - miniStep)
         {
             x = spriteWidth / 2 - miniStep;
         }
 
-        if (x > clientWidth - spriteWidth / 2 + miniStep)
+        if (x >= clientWidth - spriteWidth / 2 + miniStep)
         {
             x = clientWidth - spriteWidth / 2 + miniStep;
         }
@@ -344,23 +346,22 @@ void MouseWheel(HWND hWnd, WPARAM wParam)
 void Timer(HWND hWnd)
 {
    
-    if (x >= clientWidth - spriteWidth / 2 + step)
+    if (x >= clientWidth - spriteWidth / 2)
     {
-       
         dX = -abs(dX);
     }
 
-    if (y >= clientHeight - spriteHeight / 2 + step)
+    if (y >= clientHeight - spriteHeight / 2)
     {
         dY = -abs(dY);
     }
 
-    if (x <= spriteWidth / 2 - step)
+    if (x <= spriteWidth / 2 )
     {
         dX = abs(dX);
     }
 
-    if (y <= spriteHeight / 2 - step)
+    if (y <= spriteHeight / 2)
     {
         dY = abs(dY);
     }
